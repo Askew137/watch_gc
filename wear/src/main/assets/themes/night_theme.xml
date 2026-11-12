@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    GC Watch – Night Red Mapsforge Render Theme
+    Optimised for dark-adaptation during nighttime geocaching.
+    Pure black base, dark red roads, red accent strokes.
+    No ColorMatrix runtime overhead – this is fully declarative.
+-->
+<rendertheme xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="4"
+    map-background="#000000"
+    map-background-outside="#000000"
+    xsi:noNamespaceSchemaLocation="https://mapsforge.github.io/mapstyle/rendertheme-v4.xsd">
+
+    <!-- ── Water ─────────────────────────────────────────────────────────── -->
+    <rule e="way" k="natural" v="water|lake|reservoir">
+        <area fill="#0A0A1A" stroke="#1A1A33" stroke-width="0.3" />
+    </rule>
+    <rule e="way" k="waterway" v="river|stream|canal">
+        <line stroke="#0A0A2A" stroke-width="1.0" />
+    </rule>
+
+    <!-- ── Land cover ─────────────────────────────────────────────────────── -->
+    <rule e="way" k="natural" v="wood|forest">
+        <area fill="#070F07" />
+    </rule>
+    <rule e="way" k="landuse" v="forest|orchard|vineyard|meadow|grass">
+        <area fill="#070F07" />
+    </rule>
+    <rule e="way" k="leisure" v="park|garden|nature_reserve">
+        <area fill="#0A0F0A" />
+    </rule>
+    <rule e="way" k="landuse" v="residential|commercial|industrial">
+        <area fill="#100808" />
+    </rule>
+
+    <!-- ── Buildings ──────────────────────────────────────────────────────── -->
+    <rule e="way" k="building" v="~">
+        <area fill="#1A0505" stroke="#2D0000" stroke-width="0.5" />
+    </rule>
+
+    <!-- ── Roads – motorway ───────────────────────────────────────────────── -->
+    <rule e="way" k="highway" v="motorway|motorway_link">
+        <line stroke="#3D0000" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round" />
+        <line stroke="#FF2222" stroke-width="1.5" stroke-linecap="round" />
+    </rule>
+
+    <!-- ── Roads – trunk / primary ───────────────────────────────────────── -->
+    <rule e="way" k="highway" v="trunk|trunk_link|primary|primary_link">
+        <line stroke="#2D0000" stroke-width="4.0" stroke-linecap="round" stroke-linejoin="round" />
+        <line stroke="#CC1111" stroke-width="1.0" stroke-linecap="round" />
+    </rule>
+
+    <!-- ── Roads – secondary / tertiary ──────────────────────────────────── -->
+    <rule e="way" k="highway" v="secondary|secondary_link|tertiary|tertiary_link">
+        <line stroke="#200000" stroke-width="3.0" stroke-linecap="round" stroke-linejoin="round" />
+        <line stroke="#991111" stroke-width="0.8" stroke-linecap="round" />
+    </rule>
+
+    <!-- ── Roads – residential / unclassified ────────────────────────────── -->
+    <rule e="way" k="highway" v="residential|unclassified|living_street|service">
+        <line stroke="#180000" stroke-width="2.0" stroke-linecap="round" />
+    </rule>
+
+    <!-- ── Footways / paths / tracks ──────────────────────────────────────── -->
+    <rule e="way" k="highway" v="footway|pedestrian|path|track|steps|cycleway">
+        <line stroke="#3D0000" stroke-width="1.0" stroke-linecap="round"
+            dy="0" stroke-dasharray="3,2" />
+    </rule>
+
+    <!-- ── Railways ───────────────────────────────────────────────────────── -->
+    <rule e="way" k="railway" v="rail|subway|tram">
+        <line stroke="#1A0010" stroke-width="2.0" />
+        <line stroke="#440022" stroke-width="0.5" stroke-dasharray="6,6" />
+    </rule>
+
+    <!-- ── Administrative boundaries ─────────────────────────────────────── -->
+    <rule e="way" k="boundary" v="administrative">
+        <line stroke="#330000" stroke-width="0.5" stroke-dasharray="4,4" />
+    </rule>
+
+    <!-- ── Road labels ────────────────────────────────────────────────────── -->
+    <rule e="way" k="highway" v="~" zoom-min="14">
+        <pathText k="name" font-size="8" fill="#FF4444" stroke="#000000" stroke-width="2.0" />
+    </rule>
+
+    <!-- ── POI – parking ──────────────────────────────────────────────────── -->
+    <rule e="node" k="amenity" v="parking" zoom-min="15">
+        <symbol src="assets:symbols/parking.svg" symbol-width="12dp" />
+    </rule>
+
+    <!-- ── Contour lines ──────────────────────────────────────────────────── -->
+    <rule e="way" k="contour" v="elevation">
+        <line stroke="#180000" stroke-width="0.4" />
+    </rule>
+    <rule e="way" k="contour_ext" v="elevation_major">
+        <line stroke="#2D0000" stroke-width="0.7" />
+    </rule>
+
+</rendertheme>
