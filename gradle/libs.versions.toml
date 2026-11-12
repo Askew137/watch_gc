@@ -1,0 +1,66 @@
+[versions]
+agp                 = "8.7.2"
+kotlin              = "2.0.21"
+compose-bom         = "2024.10.00"
+wear-compose        = "1.4.0"
+horologist          = "0.6.17"
+mapsforge           = "0.21.0"
+wearable            = "18.2.0"
+coroutines          = "1.9.0"
+graphhopper         = "10.0"
+serialization       = "1.7.3"
+lifecycle           = "2.8.7"
+activity-compose    = "1.9.3"
+core-ktx            = "1.15.0"
+okhttp              = "4.12.0"
+timber              = "5.0.1"
+
+[libraries]
+# ── Kotlin ──────────────────────────────────────────────────────────────────
+kotlinx-coroutines-android   = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android",  version.ref = "coroutines" }
+kotlinx-serialization-json   = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json",  version.ref = "serialization" }
+kotlinx-serialization-proto  = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-protobuf", version.ref = "serialization" }
+
+# ── AndroidX core ────────────────────────────────────────────────────────────
+androidx-core-ktx            = { group = "androidx.core",          name = "core-ktx",                   version.ref = "core-ktx" }
+androidx-lifecycle-runtime   = { group = "androidx.lifecycle",     name = "lifecycle-runtime-ktx",      version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel = { group = "androidx.lifecycle",     name = "lifecycle-viewmodel-ktx",    version.ref = "lifecycle" }
+androidx-lifecycle-compose   = { group = "androidx.lifecycle",     name = "lifecycle-runtime-compose",  version.ref = "lifecycle" }
+activity-compose             = { group = "androidx.activity",      name = "activity-compose",           version.ref = "activity-compose" }
+
+# ── Jetpack Compose (phone) ──────────────────────────────────────────────────
+compose-bom                  = { group = "androidx.compose",       name = "compose-bom",                version.ref = "compose-bom" }
+compose-ui                   = { group = "androidx.compose.ui",    name = "ui" }
+compose-ui-tooling-preview   = { group = "androidx.compose.ui",    name = "ui-tooling-preview" }
+compose-material3            = { group = "androidx.compose.material3", name = "material3" }
+compose-icons-extended       = { group = "androidx.compose.material", name = "material-icons-extended" }
+
+# ── Wear OS Compose ──────────────────────────────────────────────────────────
+wear-compose-material        = { group = "androidx.wear.compose",  name = "compose-material",           version.ref = "wear-compose" }
+wear-compose-foundation      = { group = "androidx.wear.compose",  name = "compose-foundation",         version.ref = "wear-compose" }
+wear-compose-navigation      = { group = "androidx.wear.compose",  name = "compose-navigation",         version.ref = "wear-compose" }
+horologist-compose-layout    = { group = "com.google.android.horologist", name = "horologist-compose-layout",   version.ref = "horologist" }
+horologist-compose-material  = { group = "com.google.android.horologist", name = "horologist-compose-material", version.ref = "horologist" }
+
+# ── Wearable API ─────────────────────────────────────────────────────────────
+play-services-wearable       = { group = "com.google.android.gms", name = "play-services-wearable",     version.ref = "wearable" }
+
+# ── Mapsforge ────────────────────────────────────────────────────────────────
+mapsforge-map-android        = { group = "org.mapsforge",          name = "mapsforge-map-android",      version.ref = "mapsforge" }
+mapsforge-themes             = { group = "org.mapsforge",          name = "mapsforge-themes",           version.ref = "mapsforge" }
+
+# ── GraphHopper (mobile only) ────────────────────────────────────────────────
+graphhopper-core             = { group = "com.graphhopper",        name = "graphhopper-core",           version.ref = "graphhopper" }
+
+# ── Network / HTTP ───────────────────────────────────────────────────────────
+okhttp                       = { group = "com.squareup.okhttp3",   name = "okhttp",                     version.ref = "okhttp" }
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+timber                       = { group = "com.jakewharton.timber", name = "timber",                     version.ref = "timber" }
+
+[plugins]
+android-application  = { id = "com.android.application",                       version.ref = "agp" }
+android-library      = { id = "com.android.library",                           version.ref = "agp" }
+kotlin-android       = { id = "org.jetbrains.kotlin.android",                  version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization",     version.ref = "kotlin" }
+kotlin-compose       = { id = "org.jetbrains.kotlin.plugin.compose",           version.ref = "kotlin" }
