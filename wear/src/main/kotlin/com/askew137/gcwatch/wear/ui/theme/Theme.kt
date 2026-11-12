@@ -5,7 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.wear.compose.material.Colors
 import androidx.wear.compose.material.MaterialTheme
 import com.askew137.gcwatch.core.model.AppConfig
-import com.askew137.gcwatch.core.model.toComposeColor
+import com.askew137.gcwatch.wear.ui.theme.toComposeColor
 
 /**
  * Wear OS MaterialTheme wrapper.

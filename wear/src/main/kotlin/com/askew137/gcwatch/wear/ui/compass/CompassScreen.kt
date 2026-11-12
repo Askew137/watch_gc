@@ -30,7 +30,7 @@ import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.core.model.GpsSource
 import com.askew137.gcwatch.core.model.NavigationTarget
 import com.askew137.gcwatch.core.model.Units
-import com.askew137.gcwatch.core.model.toComposeColor
+import com.askew137.gcwatch.wear.ui.theme.toComposeColor
 import com.askew137.gcwatch.wear.gnss.GnssRepository
 import com.askew137.gcwatch.wear.gnss.WatchLocation
 import kotlin.math.roundToInt

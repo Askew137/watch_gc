@@ -4,9 +4,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.askew137.gcwatch.core.model.AccentColor
 import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.core.model.ThemeMode
-import com.askew137.gcwatch.core.model.toComposeColor
+
+/** Converts [AccentColor] enum to Compose [Color]. Lives here (mobile UI layer) to keep :core:model Compose-free. */
+fun AccentColor.toComposeColor() = Color(hex)
 
 /**
  * Material 3 dark theme for the GC Watch mobile companion.

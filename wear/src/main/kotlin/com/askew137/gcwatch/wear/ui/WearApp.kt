@@ -9,7 +9,7 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.core.model.NavigationTarget
-import com.askew137.gcwatch.core.model.toComposeColor
+import com.askew137.gcwatch.wear.ui.theme.toComposeColor
 import com.askew137.gcwatch.wear.gnss.GnssRepository
 import com.askew137.gcwatch.wear.map.AutoMapSelector
 import com.askew137.gcwatch.wear.map.MapEngineService

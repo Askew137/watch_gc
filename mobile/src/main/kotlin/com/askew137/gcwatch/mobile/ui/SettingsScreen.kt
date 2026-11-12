@@ -47,7 +47,7 @@ import com.askew137.gcwatch.core.model.AccentColor
 import com.askew137.gcwatch.core.model.GpsSource
 import com.askew137.gcwatch.core.model.ThemeMode
 import com.askew137.gcwatch.core.model.Units
-import com.askew137.gcwatch.core.model.toComposeColor
+import com.askew137.gcwatch.mobile.ui.theme.toComposeColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

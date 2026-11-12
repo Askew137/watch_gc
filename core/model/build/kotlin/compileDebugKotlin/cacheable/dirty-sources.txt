@@ -1,0 +1,7 @@
+/Users/askew137/Git/gc_watch/core/model/src/main/kotlin/com/askew137/gcwatch/core/model/NavigationTarget.kt
+/Users/askew137/Git/gc_watch/core/model/src/main/kotlin/com/askew137/gcwatch/core/model/AccentColor.kt
+/Users/askew137/Git/gc_watch/core/model/src/main/kotlin/com/askew137/gcwatch/core/model/GpsSource.kt
+/Users/askew137/Git/gc_watch/core/model/src/main/kotlin/com/askew137/gcwatch/core/model/Waypoint.kt
+/Users/askew137/Git/gc_watch/core/model/src/main/kotlin/com/askew137/gcwatch/core/model/AppConfig.kt
+/Users/askew137/Git/gc_watch/core/model/src/main/kotlin/com/askew137/gcwatch/core/model/ThemeMode.kt
+/Users/askew137/Git/gc_watch/core/model/src/main/kotlin/com/askew137/gcwatch/core/model/RouteSegment.kt

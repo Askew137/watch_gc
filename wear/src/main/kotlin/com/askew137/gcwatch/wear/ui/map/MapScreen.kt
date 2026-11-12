@@ -37,7 +37,7 @@ import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.core.model.ComputedRoute
 import com.askew137.gcwatch.core.model.GpsSource
 import com.askew137.gcwatch.core.model.Waypoint
-import com.askew137.gcwatch.core.model.toComposeColor
+import com.askew137.gcwatch.wear.ui.theme.toComposeColor
 import com.askew137.gcwatch.wear.gnss.GnssRepository
 import com.askew137.gcwatch.wear.gnss.WatchLocation
 import com.askew137.gcwatch.wear.map.AutoMapSelector

@@ -1,6 +1,5 @@
 package com.askew137.gcwatch.core.model
 
-import androidx.compose.ui.graphics.Color
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,5 +12,3 @@ enum class AccentColor(val hex: Long) {
     COOL_SILVER(0xFFE2E8F0),
     NIGHT_RED(0xFFFF2222),
 }
-
-fun AccentColor.toComposeColor() = Color(hex)
