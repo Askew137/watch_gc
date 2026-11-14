@@ -1,6 +1,7 @@
 package com.askew137.gcwatch.wear.navigation
 
 import com.askew137.gcwatch.core.communication.MessagePaths
+import com.askew137.gcwatch.wear.WearApplication
 import com.askew137.gcwatch.wear.config.ConfigRepository
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.ChannelClient
@@ -21,13 +22,11 @@ import java.io.File
  */
 class WearMessageService : WearableListenerService() {
 
-    // Repositories are singletons; a real DI framework (Hilt) would inject these.
-    private val navigationRepo: NavigationRepository by lazy {
-        NavigationRepository(applicationContext)
-    }
-    private val configRepo: ConfigRepository by lazy {
-        ConfigRepository(applicationContext)
-    }
+    // Shared with the UI via WearApplication (see there for why this must be one instance).
+    private val navigationRepo: NavigationRepository
+        get() = (applicationContext as WearApplication).navigationRepository
+    private val configRepo: ConfigRepository
+        get() = (applicationContext as WearApplication).configRepository
 
     override fun onMessageReceived(event: MessageEvent) {
         Timber.d("WearMessageService: received message on path=%s size=%d", event.path, event.data.size)

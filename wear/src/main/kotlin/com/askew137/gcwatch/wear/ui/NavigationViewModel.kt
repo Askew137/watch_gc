@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.askew137.gcwatch.core.model.ComputedRoute
 import com.askew137.gcwatch.core.model.Waypoint
+import com.askew137.gcwatch.wear.WearApplication
 import com.askew137.gcwatch.wear.gnss.WatchLocation
 import com.askew137.gcwatch.wear.navigation.NavigationRepository
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class NavigationViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val repo = NavigationRepository(app.applicationContext)
+    private val repo: NavigationRepository = (app as WearApplication).navigationRepository
 
     val activeTarget: StateFlow<Waypoint?> = repo.activeTarget
     val currentRoute: StateFlow<ComputedRoute?> = repo.currentRoute
