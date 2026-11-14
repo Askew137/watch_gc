@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">GC Watch</string>
-    <style name="Theme.GcWatch" parent="android:Theme.Material.NoTitleBar"/>
-</resources>
