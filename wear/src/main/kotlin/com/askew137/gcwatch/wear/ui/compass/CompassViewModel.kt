@@ -5,7 +5,6 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.os.PowerManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,12 +29,12 @@ class CompassViewModel : ViewModel() {
     private val _showCardinals = MutableStateFlow(true)
     val showCardinals: StateFlow<Boolean> = _showCardinals.asStateFlow()
 
-    private val _wakeLockActive = MutableStateFlow(false)
-    val wakeLockActive: StateFlow<Boolean> = _wakeLockActive.asStateFlow()
+    /** Keep the display on while the compass is shown (default on: walking to a cache). */
+    private val _keepScreenOn = MutableStateFlow(true)
+    val keepScreenOn: StateFlow<Boolean> = _keepScreenOn.asStateFlow()
 
     private var sensorManager: SensorManager? = null
     private var sensorListener: SensorEventListener? = null
-    private var wakeLock: PowerManager.WakeLock? = null
 
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
@@ -111,30 +110,13 @@ class CompassViewModel : ViewModel() {
         _showCardinals.value = !_showCardinals.value
     }
 
-    fun toggleWakeLock(context: Context) {
-        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        val current = wakeLock
-
-        if (current != null && current.isHeld) {
-            current.release()
-            wakeLock = null
-            _wakeLockActive.value = false
-            Timber.d("CompassViewModel: WakeLock released")
-        } else {
-            val wl = pm.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                "GcWatch::CompassWakeLock"
-            )
-            wl.acquire(10 * 60 * 1000L) // max 10 minutes
-            wakeLock = wl
-            _wakeLockActive.value = true
-            Timber.d("CompassViewModel: WakeLock acquired")
-        }
+    fun toggleKeepScreenOn() {
+        _keepScreenOn.value = !_keepScreenOn.value
+        Timber.d("CompassViewModel: keepScreenOn=%s", _keepScreenOn.value)
     }
 
     override fun onCleared() {
         super.onCleared()
         stopSensor()
-        wakeLock?.takeIf { it.isHeld }?.release()
     }
 }

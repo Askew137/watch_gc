@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,7 +24,8 @@ import androidx.wear.compose.material.Icon
 import com.askew137.gcwatch.wear.ui.components.IconButton
 import androidx.wear.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BrightnessMedium
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.Abc
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.SatelliteAlt
@@ -43,7 +45,7 @@ import kotlin.math.roundToInt
  * - Center: [CompassCanvas]
  * - Below canvas: distance text
  * - Left edge: GPS source toggle (top) + map mode (bottom)
- * - Right edge: cardinal toggle (top) + wakelock (bottom)
+ * - Right edge: cardinal toggle (top) + keep-screen-on (bottom)
  */
 @Composable
 fun CompassScreen(
@@ -57,11 +59,18 @@ fun CompassScreen(
     val context = LocalContext.current
     val azimuth by compassViewModel.azimuthDeg.collectAsStateWithLifecycle()
     val showCardinals by compassViewModel.showCardinals.collectAsStateWithLifecycle()
-    val wakeLockActive by compassViewModel.wakeLockActive.collectAsStateWithLifecycle()
+    val keepScreenOn by compassViewModel.keepScreenOn.collectAsStateWithLifecycle()
+    val view = LocalView.current
     val gnssSource by gnssRepository.source.collectAsStateWithLifecycle()
 
     val accentColor = remember(config.accentColor) { config.accentColor.toComposeColor() }
     val targetBearing = navigationTarget?.bearingDeg ?: 0f
+
+    // Hold the display on (full brightness, no ambient/dim) only while this screen is shown.
+    DisposableEffect(keepScreenOn) {
+        view.keepScreenOn = keepScreenOn
+        onDispose { view.keepScreenOn = false }
+    }
 
     DisposableEffect(Unit) {
         compassViewModel.startSensor(context)
@@ -149,7 +158,7 @@ fun CompassScreen(
 
         // ── Right edge: wakelock toggle ───────────────────────────────────────
         IconButton(
-            onClick = { compassViewModel.toggleWakeLock(context) },
+            onClick = { compassViewModel.toggleKeepScreenOn() },
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 4.dp)
@@ -158,9 +167,9 @@ fun CompassScreen(
                 .background(Color.Black.copy(alpha = 0.55f), CircleShape),
         ) {
             Icon(
-                Icons.Rounded.BrightnessMedium,
-                contentDescription = "Probuzení obrazovky", modifier = Modifier.size(20.dp),
-                tint = if (wakeLockActive) accentColor else Color.Gray,
+                if (keepScreenOn) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                contentDescription = "Nevypínat displej", modifier = Modifier.size(20.dp),
+                tint = if (keepScreenOn) accentColor else Color.Gray,
             )
         }
     }
