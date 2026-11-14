@@ -39,6 +39,7 @@ import androidx.wear.compose.material.ToggleChip
 import androidx.wear.compose.material.ToggleChipDefaults
 import com.askew137.gcwatch.core.model.AccentColor
 import com.askew137.gcwatch.core.model.AppConfig
+import com.askew137.gcwatch.core.model.GpsSource
 import com.askew137.gcwatch.core.model.ThemeMode
 import com.askew137.gcwatch.core.model.Units
 import com.askew137.gcwatch.wear.ui.theme.toComposeColor
@@ -49,7 +50,7 @@ import java.io.File
  * Bottom sheet-style overlay with three tabs:
  * - Mapy: map file selection with auto-detect toggle
  * - Vzhled: accent color and theme mode
- * - Jednotky: metric / imperial units
+ * - Ostatní: units (metric / imperial) and GPS source
  */
 @Composable
 fun BottomMenuSheet(
@@ -58,11 +59,13 @@ fun BottomMenuSheet(
     selectedMaps: List<File>,
     automaticMapSelection: Boolean,
     onConfigChange: (AppConfig) -> Unit,
+    gpsSource: GpsSource,
+    onGpsSourceChange: (GpsSource) -> Unit,
     onMapSelectionChange: (List<File>, Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Mapy", "Vzhled", "Jednotky")
+    val tabs = listOf("Mapy", "Vzhled", "Ostatní")
 
     Box(
         modifier = Modifier
@@ -109,9 +112,11 @@ fun BottomMenuSheet(
                     config = config,
                     onConfigChange = onConfigChange,
                 )
-                2 -> JednotkyTab(
+                2 -> OstatniTab(
                     config = config,
                     onConfigChange = onConfigChange,
+                    gpsSource = gpsSource,
+                    onGpsSourceChange = onGpsSourceChange,
                 )
             }
         }
@@ -224,32 +229,57 @@ private fun GivenThemeTab(
     }
 }
 
-// ── Tab 3: Units ──────────────────────────────────────────────────────────────
+// ── Tab 3: Units + GPS source ─────────────────────────────────────────────────
 
 @Composable
-private fun JednotkyTab(
+private fun OstatniTab(
     config: AppConfig,
     onConfigChange: (AppConfig) -> Unit,
+    gpsSource: GpsSource,
+    onGpsSourceChange: (GpsSource) -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Units.entries.forEach { units ->
-            Chip(
-                onClick = { onConfigChange(config.copy(units = units)) },
-                label = {
-                    Text(
-                        text = if (units == Units.METRIC) "Metry" else "Míle",
-                        fontSize = 10.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                },
-                colors = ChipDefaults.chipColors(
-                    backgroundColor = if (config.units == units)
-                        MaterialTheme.colors.primary.copy(alpha = 0.3f)
-                    else Color.DarkGray,
-                ),
-                modifier = Modifier.weight(1f),
-            )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Units.entries.forEach { units ->
+                Chip(
+                    onClick = { onConfigChange(config.copy(units = units)) },
+                    label = {
+                        Text(
+                            text = if (units == Units.METRIC) "Metry" else "Míle",
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    },
+                    colors = ChipDefaults.chipColors(
+                        backgroundColor = if (config.units == units)
+                            MaterialTheme.colors.primary.copy(alpha = 0.3f)
+                        else Color.DarkGray,
+                    ),
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
+        Spacer(Modifier.height(6.dp))
+        val phone = gpsSource == GpsSource.PHONE_FUSED
+        ToggleChip(
+            checked = phone,
+            onCheckedChange = {
+                onGpsSourceChange(if (it) GpsSource.PHONE_FUSED else GpsSource.WATCH_HARDWARE)
+            },
+            label = { Text("GPS z telefonu", fontSize = 11.sp, maxLines = 1) },
+            secondaryLabel = {
+                Text(if (phone) "telefon" else "hodinky", fontSize = 9.sp, color = Color.Gray)
+            },
+            toggleControl = { Switch(checked = phone) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ToggleChipDefaults.toggleChipColors(
+                checkedStartBackgroundColor = Color.Transparent,
+                checkedEndBackgroundColor = Color.Transparent,
+            ),
+        )
     }
 }

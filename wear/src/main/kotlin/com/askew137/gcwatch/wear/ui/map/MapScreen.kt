@@ -15,6 +15,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import com.askew137.gcwatch.wear.ui.compass.CompassViewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -28,14 +32,12 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.LockOpen
+import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Route
-import androidx.compose.material.icons.rounded.SatelliteAlt
 import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.core.model.ComputedRoute
 import com.askew137.gcwatch.core.model.GpsSource
@@ -57,8 +59,8 @@ import java.io.File
  * Layout (all inside the circular bounds):
  *   - Center: [MapCanvas]
  *   - Top: zoom [+] / [-] buttons
- *   - Left edge: GPS source + mode toggle
- *   - Right edge: bearing snap + route plan
+ *   - Left edge: route plan + compass screen
+ *   - Right edge: align map to heading + recenter / north-up
  *   - Bottom: menu icon opening [BottomMenuSheet]
  */
 @Composable
@@ -70,6 +72,7 @@ fun MapScreen(
     mapEngine: MapEngineService,
     autoMapSelector: AutoMapSelector,
     mapViewModel: MapViewModel,
+    compassViewModel: CompassViewModel,
     gnssRepository: GnssRepository,
     onNavigateToCompass: () -> Unit,
     onConfigChange: (AppConfig) -> Unit,
@@ -77,7 +80,8 @@ fun MapScreen(
 ) {
     val zoom by mapViewModel.zoom.collectAsStateWithLifecycle()
     val rotationDeg by mapViewModel.mapRotationDeg.collectAsStateWithLifecycle()
-    val isLocked by mapViewModel.isRotationLocked.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val gnssSource by gnssRepository.source.collectAsStateWithLifecycle()
 
     val accentColor = remember(config.accentColor) { config.accentColor.toComposeColor() }
@@ -153,43 +157,7 @@ fun MapScreen(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 14.dp).offset(x = 26.dp),
         )
 
-        // ── Left edge: GNSS source + mode toggle ─────────────────────────────
-        EdgeIconButton(
-            onClick = {
-                val newSrc = if (gnssSource == GpsSource.WATCH_HARDWARE) GpsSource.PHONE_FUSED
-                            else GpsSource.WATCH_HARDWARE
-                gnssRepository.switchSource(newSrc)
-            },
-            icon = {
-                Icon(
-                    Icons.Rounded.SatelliteAlt,
-                    contentDescription = "GPS zdroj", modifier = Modifier.size(20.dp),
-                    tint = if (gnssSource == GpsSource.WATCH_HARDWARE) accentColor else Color.Gray,
-                )
-            },
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp).offset(y = (-22).dp),
-        )
-        EdgeIconButton(
-            onClick = onNavigateToCompass,
-            icon = { Icon(Icons.Rounded.Explore, contentDescription = "Kompas", modifier = Modifier.size(20.dp), tint = accentColor) },
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp).offset(y = 22.dp),
-        )
-
-        // ── Right edge: bearing snap + route plan ─────────────────────────────
-        EdgeIconButton(
-            onClick = {
-                val bearing = location?.bearingDeg ?: 0f
-                if (isLocked) mapViewModel.unlock() else mapViewModel.snapBearing(bearing)
-            },
-            icon = {
-                Icon(
-                    if (isLocked) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
-                    contentDescription = "Zamknout azimut", modifier = Modifier.size(20.dp),
-                    tint = if (isLocked) accentColor else Color.Gray,
-                )
-            },
-            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp).offset(y = (-22).dp),
-        )
+        // ── Left edge: route plan + compass screen ───────────────────────────
         EdgeIconButton(
             onClick = {
                 val loc = location
@@ -201,6 +169,29 @@ fun MapScreen(
                 }
             },
             icon = { Icon(Icons.Rounded.Route, contentDescription = "Naplánovat trasu", modifier = Modifier.size(20.dp), tint = accentColor) },
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp).offset(y = (-22).dp),
+        )
+        EdgeIconButton(
+            onClick = onNavigateToCompass,
+            icon = { Icon(Icons.Rounded.Explore, contentDescription = "Kompas", modifier = Modifier.size(20.dp), tint = accentColor) },
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp).offset(y = 22.dp),
+        )
+
+        // ── Right edge: align to heading + recenter / north-up ───────────────
+        EdgeIconButton(
+            onClick = {
+                // One-shot: map "up" = the direction I'm facing right now (not a toggle).
+                scope.launch {
+                    compassViewModel.readAzimuthOnce(context)?.let { mapViewModel.alignToHeading(it) }
+                        ?: Timber.w("MapScreen: no heading available")
+                }
+            },
+            icon = { Icon(Icons.Rounded.Navigation, contentDescription = "Srovnat podle směru", modifier = Modifier.size(20.dp), tint = accentColor) },
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp).offset(y = (-22).dp),
+        )
+        EdgeIconButton(
+            onClick = { mapViewModel.resetNorthUp() },
+            icon = { Icon(Icons.Rounded.MyLocation, contentDescription = "Vycentrovat, sever nahoře", modifier = Modifier.size(20.dp), tint = accentColor) },
             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp).offset(y = 22.dp),
         )
 
@@ -219,6 +210,8 @@ fun MapScreen(
                 selectedMaps = selectedMaps,
                 automaticMapSelection = automaticMapSelection,
                 onConfigChange = onConfigChange,
+                gpsSource = gnssSource,
+                onGpsSourceChange = { gnssRepository.switchSource(it) },
                 onMapSelectionChange = { maps, auto ->
                     selectedMaps = maps
                     automaticMapSelection = auto

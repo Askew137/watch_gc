@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
 import timber.log.Timber
 
 /**
@@ -66,6 +69,35 @@ class CompassViewModel : ViewModel() {
         sm.registerListener(listener, rotationSensor, SensorManager.SENSOR_DELAY_UI)
         sensorListener = listener
         Timber.d("CompassViewModel: sensor registered")
+    }
+
+    /**
+     * Reads the current heading once (first rotation-vector sample) and unregisters again,
+     * so the map screen does not need to keep the sensor running. Returns null if the
+     * sensor is unavailable or no sample arrives within [timeoutMs].
+     */
+    suspend fun readAzimuthOnce(context: Context, timeoutMs: Long = 1_500L): Float? {
+        val sm = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val sensor = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) ?: return null
+        return withTimeoutOrNull(timeoutMs) {
+            suspendCancellableCoroutine { cont ->
+                val matrix = FloatArray(9)
+                val angles = FloatArray(3)
+                val listener = object : SensorEventListener {
+                    override fun onSensorChanged(event: SensorEvent) {
+                        SensorManager.getRotationMatrixFromVector(matrix, event.values)
+                        SensorManager.getOrientation(matrix, angles)
+                        val az = (Math.toDegrees(angles[0].toDouble()).toFloat() + 360f) % 360f
+                        sm.unregisterListener(this)
+                        if (cont.isActive) cont.resume(az)
+                    }
+
+                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+                }
+                sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
+                cont.invokeOnCancellation { sm.unregisterListener(listener) }
+            }
+        }
     }
 
     /** Call from Activity.onPause / DisposableEffect cleanup. */

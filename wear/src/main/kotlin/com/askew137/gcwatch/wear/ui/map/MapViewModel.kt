@@ -13,7 +13,7 @@ private const val ZOOM_MIN = 8f
 private const val ZOOM_MAX = 19f
 
 /**
- * ViewModel for the map screen. Manages zoom, map rotation, and rotation-lock state.
+ * ViewModel for the map screen. Manages zoom and map rotation.
  */
 class MapViewModel : ViewModel() {
 
@@ -22,9 +22,6 @@ class MapViewModel : ViewModel() {
 
     private val _mapRotationDeg = MutableStateFlow(0f)
     val mapRotationDeg: StateFlow<Float> = _mapRotationDeg.asStateFlow()
-
-    private val _isRotationLocked = MutableStateFlow(false)
-    val isRotationLocked: StateFlow<Boolean> = _isRotationLocked.asStateFlow()
 
     fun zoomIn() {
         _zoom.value = min(_zoom.value + 1f, ZOOM_MAX)
@@ -42,18 +39,18 @@ class MapViewModel : ViewModel() {
     }
 
     /**
-     * Locks map rotation to the current sensor azimuth so "up" = current heading.
+     * One-shot: rotates the map so that the direction the user is facing
+     * ([headingDeg], 0 = north, clockwise) points to the top of the screen.
+     * The canvas is rotated clockwise by [mapRotationDeg], so "heading up" needs -heading.
      */
-    fun snapBearing(sensorAzimuthDeg: Float) {
-        _mapRotationDeg.value = sensorAzimuthDeg
-        _isRotationLocked.value = true
-        Timber.d("MapViewModel: bearing snapped to %.1f deg", sensorAzimuthDeg)
+    fun alignToHeading(headingDeg: Float) {
+        _mapRotationDeg.value = (360f - headingDeg) % 360f
+        Timber.d("MapViewModel: aligned to heading %.1f deg", headingDeg)
     }
 
-    /** Releases bearing lock and resets to north-up. */
-    fun unlock() {
-        _isRotationLocked.value = false
+    /** Back to the default view: north up (the map is always centred on the position). */
+    fun resetNorthUp() {
         _mapRotationDeg.value = 0f
-        Timber.d("MapViewModel: rotation lock released")
+        Timber.d("MapViewModel: north-up")
     }
 }
