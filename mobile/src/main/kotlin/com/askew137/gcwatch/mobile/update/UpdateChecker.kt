@@ -22,7 +22,7 @@ object UpdateChecker {
         .build()
 
     private const val RELEASES_URL =
-        "https://api.github.com/repos/Askew137/watch_gc/releases/latest"
+        "https://api.github.com/repos/Askew137/gc_watch/releases/latest"
 
     /**
      * Makes an HTTP GET to the GitHub Releases API.

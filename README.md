@@ -24,8 +24,8 @@ Offline geocaching navigátor pro **OnePlus Watch 2** (Wear OS 4) s companion ap
 
 ```bash
 # 1. Klonuj repozitář
-git clone https://github.com/Askew137/watch_gc.git
-cd watch_gc
+git clone https://github.com/Askew137/gc_watch.git
+cd gc_watch
 
 # 2. Otevři v Android Studio (automaticky nastaví Gradle wrapper)
 # NEBO inicializuj wrapper ručně (vyžaduje Gradle 8.9+ na PATH):
