@@ -94,9 +94,14 @@ dependencies {
     // Logging
     implementation(libs.timber)
 
+    // Offline routing (vendored BRouter, MIT – third_party/brouter)
+    implementation(project(":brouter-core"))
+
     // Core modules
     implementation(project(":core:model"))
     implementation(project(":core:communication"))
+
+    testImplementation(libs.junit)
 
     debugImplementation(libs.compose.ui.tooling.preview)
 }

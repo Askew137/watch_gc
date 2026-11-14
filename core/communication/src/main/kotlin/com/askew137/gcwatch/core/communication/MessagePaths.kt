@@ -5,8 +5,14 @@ object MessagePaths {
     const val SET_TARGET = "/set_target"
 
     /**
-     * Phone → Watch: route to the active target, pushed right after SET_TARGET (not requested
-     * by the watch). Payload: protobuf ComputedRoute.
+     * Watch → Phone: sent automatically once the watch has both a target and a GPS fix, so the
+     * route is ready before the user switches to it. Payload: protobuf RouteRequest.
+     */
+    const val ROUTE_REQUEST = "/route_request"
+
+    /**
+     * Phone → Watch: answer to ROUTE_REQUEST. Payload: protobuf ComputedRoute; an empty
+     * `segments` list means "no route available" (missing data, no road nearby, ...).
      */
     const val ROUTE_RESULT = "/route_result"
 

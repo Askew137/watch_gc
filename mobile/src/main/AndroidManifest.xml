@@ -21,6 +21,7 @@
     <application
         android:name=".ui.MobileApplication"
         android:allowBackup="true"
+        android:largeHeap="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -67,6 +68,12 @@
         <!-- ══ Map file transfer to watch (foreground) ══════════════════════ -->
         <service
             android:name=".maps.MapTransferService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- ══ Routing data download (BRouter .rd5 tiles, foreground) ═══════ -->
+        <service
+            android:name=".routing.SegmentDownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 

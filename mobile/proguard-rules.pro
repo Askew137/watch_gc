@@ -12,3 +12,7 @@
 
 # Timber
 -dontwarn org.slf4j.**
+
+# Vendored BRouter routing engine (reads profiles/data reflectively-ish; keep it intact)
+-keep class btools.** { *; }
+-dontwarn btools.**

@@ -1,6 +1,7 @@
 package com.askew137.gcwatch.wear.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +41,17 @@ fun WearApp(
     val activeTarget by navigationViewModel.activeTarget.collectAsStateWithLifecycle()
     val currentRoute by navigationViewModel.currentRoute.collectAsStateWithLifecycle()
     val lineMode by navigationViewModel.lineMode.collectAsStateWithLifecycle()
+    val routePending by navigationViewModel.routePending.collectAsStateWithLifecycle()
+    val routeRequestNeeded by navigationViewModel.routeRequestNeeded.collectAsStateWithLifecycle()
+
+    // Ask the phone for the route as soon as there is a target AND a GPS fix, so it is ready
+    // before the user switches to it. Re-keyed only when the need or the first fix changes.
+    val hasFix = location != null
+    LaunchedEffect(routeRequestNeeded, hasFix) {
+        val target = routeRequestNeeded
+        val loc = location
+        if (target != null && loc != null) navigationViewModel.requestRoute(loc, target)
+    }
 
     // Build NavigationTarget from location + active target
     val navigationTarget = remember(location, activeTarget) {
@@ -64,6 +76,7 @@ fun WearApp(
                     activeTarget = activeTarget,
                     route = currentRoute,
                     lineMode = lineMode,
+                    routePending = routePending,
                     mapEngine = mapEngine,
                     autoMapSelector = autoMapSelector,
                     mapViewModel = mapViewModel,

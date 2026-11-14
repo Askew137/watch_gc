@@ -25,3 +25,18 @@ object RouteSerializer {
     fun encode(route: ComputedRoute): ByteArray = ProtoBuf.encodeToByteArray(route)
     fun decode(bytes: ByteArray): ComputedRoute = ProtoBuf.decodeFromByteArray(bytes)
 }
+
+/** Sent from the watch to the phone to request an on-foot route. */
+@OptIn(ExperimentalSerializationApi::class)
+@kotlinx.serialization.Serializable
+data class RouteRequest(
+    val fromLat: Double,
+    val fromLon: Double,
+    val toLat: Double,
+    val toLon: Double,
+) {
+    companion object {
+        fun encode(req: RouteRequest): ByteArray = ProtoBuf.encodeToByteArray(req)
+        fun decode(bytes: ByteArray): RouteRequest = ProtoBuf.decodeFromByteArray(bytes)
+    }
+}

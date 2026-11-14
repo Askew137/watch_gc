@@ -12,7 +12,7 @@ class WearApplication : Application() {
      * phone) and the UI ViewModels MUST share the same instances, otherwise incoming targets,
      * routes and config updates never reach the UI.
      */
-    val navigationRepository: NavigationRepository by lazy { NavigationRepository() }
+    val navigationRepository: NavigationRepository by lazy { NavigationRepository(this) }
     val configRepository: ConfigRepository by lazy { ConfigRepository(this) }
 
     override fun onCreate() {

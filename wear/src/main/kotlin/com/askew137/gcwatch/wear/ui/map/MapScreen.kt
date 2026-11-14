@@ -37,7 +37,7 @@ import com.askew137.gcwatch.wear.ui.components.IconButton
 import androidx.wear.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.CallMade
+import androidx.compose.material.icons.automirrored.rounded.CallMade
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.MyLocation
@@ -78,6 +78,7 @@ fun MapScreen(
     activeTarget: Waypoint?,
     route: ComputedRoute?,
     lineMode: TargetLineMode,
+    routePending: Boolean,
     mapEngine: MapEngineService,
     autoMapSelector: AutoMapSelector,
     mapViewModel: MapViewModel,
@@ -189,13 +190,14 @@ fun MapScreen(
                     mode == null -> "Žádný cíl"
                     mode == TargetLineMode.AIR_LINE -> "Vzdušná čára"
                     mode == TargetLineMode.ROUTE -> "Trasa"
+                    route == null && routePending -> "Jen cíl (trasa se ještě počítá)"
                     route == null -> "Jen cíl (trasa není k dispozici)"
                     else -> "Jen cíl"
                 }
             },
             icon = {
                 val (icon, tint) = when (effectiveLineMode) {
-                    TargetLineMode.AIR_LINE -> Icons.Rounded.CallMade to accentColor
+                    TargetLineMode.AIR_LINE -> Icons.AutoMirrored.Rounded.CallMade to accentColor
                     TargetLineMode.ROUTE -> Icons.Rounded.Route to accentColor
                     TargetLineMode.OFF -> Icons.Rounded.LocationOn to Color.Gray
                 }

@@ -11,6 +11,8 @@ import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.mobile.maps.CopyProgress
 import com.askew137.gcwatch.mobile.maps.MapFileRepository
 import com.askew137.gcwatch.mobile.maps.MapTransferService
+import com.askew137.gcwatch.mobile.routing.SegmentDownloadService
+import com.askew137.gcwatch.mobile.routing.SegmentRepository
 import com.askew137.gcwatch.mobile.update.UpdateChecker
 import com.askew137.gcwatch.mobile.update.UpdateInfo
 import com.google.android.gms.wearable.Wearable
@@ -54,6 +56,16 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
     private val _copyProgress = MutableStateFlow<CopyProgress?>(null)
     val copyProgress: StateFlow<CopyProgress?> = _copyProgress.asStateFlow()
 
+    // ── Routing data (BRouter .rd5 tiles) ─────────────────────────────────────
+
+    private val _installedSegments = MutableStateFlow<List<File>>(emptyList())
+    val installedSegments: StateFlow<List<File>> = _installedSegments.asStateFlow()
+
+    val segmentDownload = SegmentRepository.download
+    val segmentDownloadError = SegmentRepository.downloadError
+    val missingSegment = SegmentRepository.missingTile
+    val segmentRemoteSizes = SegmentRepository.remoteSizes
+
     // ── Update check ──────────────────────────────────────────────────────────
 
     private val _updateInfo = MutableStateFlow<UpdateInfo?>(null)
@@ -67,6 +79,14 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
     init {
         refreshMapFiles()
         refreshConnectedNode()
+        refreshSegments()
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            SegmentRepository.fetchRemoteSizes(SegmentRepository.knownTiles.map { it.name })
+        }
+        // A finished (or failed) download changes what is installed.
+        viewModelScope.launch {
+            SegmentRepository.download.collect { refreshSegments() }
+        }
     }
 
     // ── Public actions ────────────────────────────────────────────────────────
@@ -89,6 +109,22 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
 
     fun sendMapToWatch(mapFile: File) {
         MapTransferService.startTransfer(app, Uri.fromFile(mapFile))
+    }
+
+    fun refreshSegments() {
+        _installedSegments.value = SegmentRepository.installedFiles(app)
+    }
+
+    fun downloadSegment(tile: String) = SegmentDownloadService.start(app, tile)
+
+    fun deleteSegment(tile: String) {
+        SegmentRepository.delete(app, tile)
+        refreshSegments()
+    }
+
+    /** Also fetches the size of a tile the engine asked for that is not in the known list. */
+    fun fetchSegmentSize(tile: String) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { SegmentRepository.fetchRemoteSizes(listOf(tile)) }
     }
 
     fun checkForUpdate() {

@@ -28,3 +28,9 @@ include(":core:model")
 include(":core:communication")
 include(":mobile")
 include(":wear")
+
+// ── Vendored BRouter routing engine (MIT, see third_party/brouter/README.md) ──
+for (m in listOf("util", "codec", "expressions", "mapaccess", "core")) {
+    include(":brouter-$m")
+    project(":brouter-$m").projectDir = file("third_party/brouter/brouter-$m")
+}
