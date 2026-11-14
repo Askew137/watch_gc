@@ -2,6 +2,7 @@ package com.askew137.gcwatch.mobile.ui
 
 import android.app.Application
 import com.askew137.gcwatch.mobile.config.MobileConfigRepository
+import com.askew137.gcwatch.mobile.BuildConfig
 import timber.log.Timber
 
 /** Application class – plants Timber tree and initialises global singletons. */

@@ -68,6 +68,7 @@ class MapTransferService : Service() {
 
     private suspend fun transferMap(mapUri: Uri, fileName: String, startId: Int) {
         val notifManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        var completed = false
 
         try {
             // Determine file size for progress calculation.
@@ -127,13 +128,22 @@ class MapTransferService : Service() {
                     .sendMessage(node.id, PATH_TRANSFER_DONE, fileName.toByteArray())
                     .await()
 
+                completed = true
                 notifManager.notify(NOTIF_ID, buildNotification(fileName, 100, done = true, error = false))
             } finally {
-                channelClient.close(channel).await()
+                // The watch usually closes the channel first, so this may never complete;
+                // don't let cleanup hang or overwrite a successful transfer.
+                runCatching {
+                    kotlinx.coroutines.withTimeout(2_000) { channelClient.close(channel).await() }
+                }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Map transfer failed")
-            notifManager.notify(NOTIF_ID, buildNotification(fileName, 0, done = false, error = true))
+            if (completed) {
+                Timber.w(e, "Ignoring error after successful map transfer")
+            } else {
+                Timber.e(e, "Map transfer failed")
+                notifManager.notify(NOTIF_ID, buildNotification(fileName, 0, done = false, error = true))
+            }
         } finally {
             stopSelf(startId)
         }

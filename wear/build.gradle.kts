@@ -10,7 +10,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.askew137.gcwatch.wear"
+        applicationId = "com.askew137.gcwatch"
         minSdk = 30
         targetSdk = 35
         versionCode = 1
@@ -38,10 +38,12 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
+    implementation(platform(libs.compose.bom))
     // Wear OS Compose
     implementation(libs.wear.compose.material)
     implementation(libs.wear.compose.foundation)
@@ -57,6 +59,7 @@ dependencies {
 
     // Wearable
     implementation(libs.play.services.wearable)
+    implementation(libs.kotlinx.coroutines.play)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)

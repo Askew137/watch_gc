@@ -50,7 +50,6 @@ class WearMainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mapEngine.destroy()
-        gnssRepository.close()
         Timber.d("WearMainActivity: onDestroy")
     }
 }

@@ -67,6 +67,7 @@ fun WearApp(
                     mapViewModel = mapViewModel,
                     gnssRepository = gnssRepository,
                     onNavigateToCompass = { navController.navigate(DEST_COMPASS) },
+                    onConfigChange = { configViewModel.updateConfig(it) },
                     onRequestRoute = { from, to -> navigationViewModel.requestRoute(from, to) },
                 )
             }

@@ -9,6 +9,5 @@ enum class AccentColor(val hex: Long) {
     SAFETY_ORANGE(0xFFFF6D00),
     SIGNAL_GOLD(0xFFFFD700),
     PURE_WHITE(0xFFFFFFFF),
-    COOL_SILVER(0xFFE2E8F0),
     NIGHT_RED(0xFFFF2222),
 }

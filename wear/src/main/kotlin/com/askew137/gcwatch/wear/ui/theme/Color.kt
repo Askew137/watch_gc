@@ -18,5 +18,7 @@ val ElectricCyan  = Color(0xFF00E5FF)
 val SafetyOrange  = Color(0xFFFF6D00)
 val SignalGold    = Color(0xFFFFD700)
 val PureWhite     = Color(0xFFFFFFFF)
-val CoolSilver    = Color(0xFFE2E8F0)
 val NightRed      = Color(0xFFFF2222)
+
+/** UI grey-silver for secondary text; not offered as a user accent. */
+val CoolSilver    = Color(0xFFE2E8F0)

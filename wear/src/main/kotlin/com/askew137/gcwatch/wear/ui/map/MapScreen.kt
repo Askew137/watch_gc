@@ -1,6 +1,7 @@
 package com.askew137.gcwatch.wear.ui.map
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -20,7 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.IconButton
+import com.askew137.gcwatch.wear.ui.components.IconButton
 import androidx.wear.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -42,7 +45,10 @@ import com.askew137.gcwatch.wear.gnss.GnssRepository
 import com.askew137.gcwatch.wear.gnss.WatchLocation
 import com.askew137.gcwatch.wear.map.AutoMapSelector
 import com.askew137.gcwatch.wear.map.MapEngineService
-import com.google.android.horologist.compose.rotaryinput.rotaryWithScroll
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.FocusRequester
 import timber.log.Timber
 import java.io.File
 
@@ -66,6 +72,7 @@ fun MapScreen(
     mapViewModel: MapViewModel,
     gnssRepository: GnssRepository,
     onNavigateToCompass: () -> Unit,
+    onConfigChange: (AppConfig) -> Unit,
     onRequestRoute: (WatchLocation, Waypoint) -> Unit,
 ) {
     val zoom by mapViewModel.zoom.collectAsStateWithLifecycle()
@@ -80,10 +87,10 @@ fun MapScreen(
     }
 
     // Map file management
-    val availableMaps = remember(autoMapSelector) { autoMapSelector.availableMapFiles() }
+    var showMenu by remember { mutableStateOf(false) }
+    val availableMaps = remember(autoMapSelector, showMenu) { autoMapSelector.availableMapFiles() }
     var selectedMaps by remember { mutableStateOf<List<File>>(emptyList()) }
     var automaticMapSelection by remember { mutableStateOf(true) }
-    var showMenu by remember { mutableStateOf(false) }
 
     // Update engine when map files change
     val effectiveMaps by remember(automaticMapSelection, selectedMaps, center) {
@@ -96,11 +103,30 @@ fun MapScreen(
         }
     }
 
+    // Feed the selected .map files / theme into the render engine.
+    var mapsVersion by remember { mutableIntStateOf(0) }
+    LaunchedEffect(effectiveMaps) {
+        mapEngine.setMapFiles(effectiveMaps)
+        mapsVersion++
+    }
+    LaunchedEffect(config.themeMode) {
+        mapEngine.applyThemeMode(config.themeMode)
+        mapsVersion++
+    }
+
+    val rotaryFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { rotaryFocus.requestFocus() }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .rotaryWithScroll(onScroll = { delta -> mapViewModel.zoomBy(delta * 0.05f) }),
+            .onRotaryScrollEvent { e ->
+                mapViewModel.zoomBy(e.verticalScrollPixels * 0.05f)
+                true
+            }
+            .focusRequester(rotaryFocus)
+            .focusable(),
         contentAlignment = Alignment.Center,
     ) {
         // ── Map canvas ───────────────────────────────────────────────────────
@@ -108,6 +134,7 @@ fun MapScreen(
             engine = mapEngine,
             center = center,
             zoom = zoom,
+            mapsVersion = mapsVersion,
             rotationDeg = rotationDeg,
             route = route,
             accentColor = accentColor,
@@ -117,13 +144,13 @@ fun MapScreen(
         // ── Top: zoom buttons ────────────────────────────────────────────────
         EdgeIconButton(
             onClick = { mapViewModel.zoomIn() },
-            icon = { Icon(Icons.Rounded.Add, contentDescription = "Přiblížit", tint = accentColor) },
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp),
+            icon = { Icon(Icons.Rounded.Add, contentDescription = "Přiblížit", modifier = Modifier.size(20.dp), tint = accentColor) },
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 14.dp).offset(x = (-26).dp),
         )
         EdgeIconButton(
             onClick = { mapViewModel.zoomOut() },
-            icon = { Icon(Icons.Rounded.Remove, contentDescription = "Oddálit", tint = accentColor) },
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 56.dp),
+            icon = { Icon(Icons.Rounded.Remove, contentDescription = "Oddálit", modifier = Modifier.size(20.dp), tint = accentColor) },
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 14.dp).offset(x = 26.dp),
         )
 
         // ── Left edge: GNSS source + mode toggle ─────────────────────────────
@@ -136,7 +163,7 @@ fun MapScreen(
             icon = {
                 Icon(
                     Icons.Rounded.SatelliteAlt,
-                    contentDescription = "GPS zdroj",
+                    contentDescription = "GPS zdroj", modifier = Modifier.size(20.dp),
                     tint = if (gnssSource == GpsSource.WATCH_HARDWARE) accentColor else Color.Gray,
                 )
             },
@@ -144,7 +171,7 @@ fun MapScreen(
         )
         EdgeIconButton(
             onClick = onNavigateToCompass,
-            icon = { Icon(Icons.Rounded.Navigation, contentDescription = "Kompas", tint = accentColor) },
+            icon = { Icon(Icons.Rounded.Explore, contentDescription = "Kompas", modifier = Modifier.size(20.dp), tint = accentColor) },
             modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp).offset(y = 22.dp),
         )
 
@@ -156,9 +183,9 @@ fun MapScreen(
             },
             icon = {
                 Icon(
-                    if (isLocked) Icons.Rounded.Lock else Icons.Rounded.Explore,
-                    contentDescription = "Zamknout azimut",
-                    tint = if (isLocked) accentColor else Color.White,
+                    if (isLocked) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
+                    contentDescription = "Zamknout azimut", modifier = Modifier.size(20.dp),
+                    tint = if (isLocked) accentColor else Color.Gray,
                 )
             },
             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp).offset(y = (-22).dp),
@@ -173,14 +200,14 @@ fun MapScreen(
                     Timber.w("MapScreen: cannot request route — location=%s target=%s", loc, target)
                 }
             },
-            icon = { Icon(Icons.Rounded.Route, contentDescription = "Naplánovat trasu", tint = accentColor) },
+            icon = { Icon(Icons.Rounded.Route, contentDescription = "Naplánovat trasu", modifier = Modifier.size(20.dp), tint = accentColor) },
             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp).offset(y = 22.dp),
         )
 
         // ── Bottom: menu icon ────────────────────────────────────────────────
         EdgeIconButton(
             onClick = { showMenu = true },
-            icon = { Icon(Icons.Rounded.Menu, contentDescription = "Menu", tint = accentColor) },
+            icon = { Icon(Icons.Rounded.Menu, contentDescription = "Menu", modifier = Modifier.size(20.dp), tint = accentColor) },
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp),
         )
 
@@ -191,7 +218,7 @@ fun MapScreen(
                 availableMaps = availableMaps,
                 selectedMaps = selectedMaps,
                 automaticMapSelection = automaticMapSelection,
-                onConfigChange = { /* caller handles */ },
+                onConfigChange = onConfigChange,
                 onMapSelectionChange = { maps, auto ->
                     selectedMaps = maps
                     automaticMapSelection = auto
@@ -210,7 +237,9 @@ private fun BoxScope.EdgeIconButton(
 ) {
     IconButton(
         onClick = onClick,
-        modifier = modifier.size(40.dp),
+        modifier = modifier
+            .size(32.dp)
+            .background(Color.Black.copy(alpha = 0.55f), CircleShape),
     ) {
         icon()
     }

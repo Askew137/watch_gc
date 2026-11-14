@@ -68,16 +68,9 @@ object RoutingFileRepository {
             GraphHopperEngine.release()
 
             val gh = GraphHopper()
-            gh.forMobile()
+            GraphHopperEngine.configureCar(gh)
             gh.osmFile = localPbf.absolutePath
             gh.graphHopperLocation = graphOutDir.absolutePath
-            gh.setProfiles(
-                com.graphhopper.config.Profile("car").apply {
-                    vehicle = "car"
-                    weighting = "fastest"
-                }
-            )
-            gh.encodingManager = com.graphhopper.routing.util.EncodingManager.create("car")
             gh.importAndClose()
 
             Timber.i("OSM import complete → ${graphOutDir.absolutePath}")

@@ -1,5 +1,5 @@
 [versions]
-agp                 = "8.7.2"
+agp                 = "8.13.2"
 kotlin              = "2.0.21"
 compose-bom         = "2024.10.00"
 wear-compose        = "1.4.0"
@@ -14,6 +14,7 @@ activity-compose    = "1.9.3"
 core-ktx            = "1.15.0"
 okhttp              = "4.12.0"
 timber              = "5.0.1"
+navigation          = "2.8.4"
 
 [libraries]
 # ── Kotlin ──────────────────────────────────────────────────────────────────
@@ -34,6 +35,9 @@ compose-ui                   = { group = "androidx.compose.ui",    name = "ui" }
 compose-ui-tooling-preview   = { group = "androidx.compose.ui",    name = "ui-tooling-preview" }
 compose-material3            = { group = "androidx.compose.material3", name = "material3" }
 compose-icons-extended       = { group = "androidx.compose.material", name = "material-icons-extended" }
+
+androidx-navigation-compose    = { group = "androidx.navigation",    name = "navigation-compose",         version.ref = "navigation" }
+kotlinx-coroutines-play      = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
 
 # ── Wear OS Compose ──────────────────────────────────────────────────────────
 wear-compose-material        = { group = "androidx.wear.compose",  name = "compose-material",           version.ref = "wear-compose" }

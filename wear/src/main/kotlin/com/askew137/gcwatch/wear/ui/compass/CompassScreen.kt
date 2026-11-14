@@ -1,6 +1,7 @@
 package com.askew137.gcwatch.wear.ui.compass
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -19,12 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.IconButton
+import com.askew137.gcwatch.wear.ui.components.IconButton
 import androidx.wear.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BrightnessMedium
-import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.rounded.Navigation
+import androidx.compose.material.icons.rounded.Abc
+import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.SatelliteAlt
 import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.core.model.GpsSource
@@ -106,11 +107,12 @@ fun CompassScreen(
                 .align(Alignment.CenterStart)
                 .padding(start = 4.dp)
                 .offset(y = (-22).dp)
-                .size(40.dp),
+                .size(32.dp)
+                .background(Color.Black.copy(alpha = 0.55f), CircleShape),
         ) {
             Icon(
                 Icons.Rounded.SatelliteAlt,
-                contentDescription = "GPS zdroj",
+                contentDescription = "GPS zdroj", modifier = Modifier.size(20.dp),
                 tint = if (gnssSource == GpsSource.WATCH_HARDWARE) accentColor else Color.Gray,
             )
         }
@@ -122,9 +124,10 @@ fun CompassScreen(
                 .align(Alignment.CenterStart)
                 .padding(start = 4.dp)
                 .offset(y = 22.dp)
-                .size(40.dp),
+                .size(32.dp)
+                .background(Color.Black.copy(alpha = 0.55f), CircleShape),
         ) {
-            Icon(Icons.Rounded.Navigation, contentDescription = "Mapa", tint = accentColor)
+            Icon(Icons.Rounded.Map, contentDescription = "Mapa", modifier = Modifier.size(20.dp), tint = accentColor)
         }
 
         // ── Right edge: cardinal toggle ───────────────────────────────────────
@@ -134,11 +137,12 @@ fun CompassScreen(
                 .align(Alignment.CenterEnd)
                 .padding(end = 4.dp)
                 .offset(y = (-22).dp)
-                .size(40.dp),
+                .size(32.dp)
+                .background(Color.Black.copy(alpha = 0.55f), CircleShape),
         ) {
             Icon(
-                Icons.Rounded.Explore,
-                contentDescription = "Světové strany",
+                Icons.Rounded.Abc,
+                contentDescription = "Světové strany", modifier = Modifier.size(20.dp),
                 tint = if (showCardinals) accentColor else Color.Gray,
             )
         }
@@ -150,11 +154,12 @@ fun CompassScreen(
                 .align(Alignment.CenterEnd)
                 .padding(end = 4.dp)
                 .offset(y = 22.dp)
-                .size(40.dp),
+                .size(32.dp)
+                .background(Color.Black.copy(alpha = 0.55f), CircleShape),
         ) {
             Icon(
                 Icons.Rounded.BrightnessMedium,
-                contentDescription = "Probuzení obrazovky",
+                contentDescription = "Probuzení obrazovky", modifier = Modifier.size(20.dp),
                 tint = if (wakeLockActive) accentColor else Color.Gray,
             )
         }

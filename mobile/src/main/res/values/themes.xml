@@ -1,4 +1,4 @@
 <resources>
     <!-- Base application theme – overridden at runtime by MobileTheme (Compose). -->
-    <style name="Theme.GcWatch" parent="android:Theme.Material.NoTitleBar" />
+    <style name="Theme.GcWatch" parent="@android:style/Theme.Material.NoActionBar" />
 </resources>

@@ -57,7 +57,7 @@ fun CompassCanvas(
         // ── Cardinal labels ──────────────────────────────────────────────────
         if (showCardinals) {
             val cardinals = listOf("N" to 0f, "E" to 90f, "S" to 180f, "W" to 270f)
-            val labelRadius = radius - 16.dp.toPx()
+            val labelRadius = radius - 14.dp.toPx()
             cardinals.forEach { (label, angleDeg) ->
                 val rotated = (angleDeg - azimuthDeg + 360f) % 360f
                 val rad = Math.toRadians(rotated.toDouble() - 90.0)
@@ -105,6 +105,15 @@ private fun DrawScope.drawArrow(
     val baseHalfWidth = radius * 0.22f
     val baseY = cy + radius * 0.35f
 
+    // Tail: grey wedge below the arrow base (drawn first so it never covers the arrow)
+    val tailPath = Path().apply {
+        moveTo(cx, baseY + radius * 0.35f)
+        lineTo(cx + baseHalfWidth * 0.7f, baseY)
+        lineTo(cx - baseHalfWidth * 0.7f, baseY)
+        close()
+    }
+    drawPath(path = tailPath, color = Color.DarkGray)
+
     val arrowPath = Path().apply {
         moveTo(cx, tipY)
         lineTo(cx + baseHalfWidth, baseY)
@@ -122,12 +131,4 @@ private fun DrawScope.drawArrow(
         style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
     )
 
-    // Tail triangle (opposite direction, grey)
-    val tailPath = Path().apply {
-        moveTo(cx, cy + radius * 0.5f)
-        lineTo(cx + baseHalfWidth * 0.7f, cy)
-        lineTo(cx - baseHalfWidth * 0.7f, cy)
-        close()
-    }
-    drawPath(path = tailPath, color = Color.DarkGray)
 }

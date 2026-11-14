@@ -8,7 +8,8 @@ import com.askew137.gcwatch.core.model.SegmentType
 import com.graphhopper.GHRequest
 import com.graphhopper.GraphHopper
 import com.graphhopper.config.Profile
-import com.graphhopper.routing.util.EncodingManager
+import com.graphhopper.util.CustomModel
+import com.graphhopper.json.Statement
 import com.graphhopper.util.Parameters
 import com.graphhopper.util.shapes.GHPoint
 import timber.log.Timber
@@ -66,7 +67,7 @@ object GraphHopperEngine {
 
             val path = response.best
             val points = path.points
-            val routePoints = (0 until points.size).map { i ->
+            val routePoints = (0 until points.size()).map { i ->
                 RoutePoint(lat = points.getLat(i), lon = points.getLon(i))
             }
 
@@ -99,6 +100,18 @@ object GraphHopperEngine {
         }
     }
 
+    /** Configure a GraphHopper 10 instance with a simple "car" profile (custom model). */
+    fun configureCar(gh: GraphHopper) {
+        gh.setEncodedValuesString("car_access, car_average_speed")
+        gh.setProfiles(
+            Profile("car").setCustomModel(
+                CustomModel()
+                    .addToPriority(Statement.If("!car_access", Statement.Op.MULTIPLY, "0"))
+                    .addToSpeed(Statement.If("true", Statement.Op.LIMIT, "car_average_speed"))
+            )
+        )
+    }
+
     /** Release the GraphHopper instance (call when user removes graph files). */
     fun release() {
         hopper?.close()
@@ -116,14 +129,9 @@ object GraphHopperEngine {
 
         Timber.i("Initializing GraphHopper from $graphDir")
         val gh = GraphHopper()
-        gh.forMobile()
+        configureCar(gh)
         gh.graphHopperLocation = graphDir
-        gh.setProfiles(Profile("car").apply {
-            vehicle = "car"
-            weighting = "fastest"
-        })
-        gh.encodingManager = EncodingManager.create("car")
-        gh.load(graphDir)
+        gh.load()
 
         hopper = gh
         initializedDir = graphDir

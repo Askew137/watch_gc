@@ -10,7 +10,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.askew137.gcwatch.mobile"
+        applicationId = "com.askew137.gcwatch"
         minSdk = 29
         targetSdk = 35
         versionCode = 1
@@ -33,7 +33,10 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 
     packaging {
         resources {
@@ -64,6 +67,8 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play)
+    implementation(libs.androidx.navigation.compose)
 
     // Serialization
     implementation(libs.kotlinx.serialization.proto)

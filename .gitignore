@@ -11,3 +11,7 @@ local.properties
 *.jks
 *.keystore
 **/.DS_Store
+
+# Build outputs – never commit these
+**/build/
+.kotlin/

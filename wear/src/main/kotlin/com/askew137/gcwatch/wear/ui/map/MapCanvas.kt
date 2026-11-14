@@ -48,6 +48,7 @@ fun MapCanvas(
     engine: MapEngineService,
     center: LatLon,
     zoom: Float,
+    mapsVersion: Int,
     rotationDeg: Float,
     route: ComputedRoute?,
     accentColor: Color,
@@ -56,6 +57,7 @@ fun MapCanvas(
     val zoomByte = remember(zoom) { zoom.toInt().toByte() }
 
     Canvas(modifier = modifier.fillMaxSize()) {
+        @Suppress("UNUSED_VARIABLE") val redrawOnMapsChange = mapsVersion
         val canvasW = size.width
         val canvasH = size.height
 
@@ -66,7 +68,13 @@ fun MapCanvas(
             route?.let { drawRoute(it, center, zoomByte, canvasW, canvasH, accentColor) }
         }
 
-        // Always draw position dot on top (un-rotated)
+        // Always draw position dot on top (un-rotated), with a dark halo so it
+        // stays visible on any map colour / accent colour.
+        drawCircle(
+            color = Color.Black.copy(alpha = 0.85f),
+            radius = 11.dp.toPx(),
+            center = center(size),
+        )
         drawCircle(
             color = accentColor,
             radius = 8.dp.toPx(),
@@ -105,7 +113,7 @@ private fun DrawScope.drawTiles(
             val py = (ty - centerTileY) * scale + canvasH / 2 - offY
             drawImage(
                 image = bitmap.asImageBitmap(),
-                topLeft = Offset(px, py),
+                topLeft = Offset(kotlin.math.round(px), kotlin.math.round(py)),
             )
         }
     }

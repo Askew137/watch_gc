@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -65,13 +67,13 @@ fun BottomMenuSheet(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Black.copy(alpha = 0.95f))
+            .background(Black)
             .clickable(onClick = {}), // consume clicks
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(start = 26.dp, end = 26.dp, top = 30.dp, bottom = 22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Tab row
@@ -84,15 +86,17 @@ fun BottomMenuSheet(
                     Text(
                         text = label,
                         fontSize = 11.sp,
+                        maxLines = 1,
+                        fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else null,
                         color = if (isSelected) MaterialTheme.colors.primary else Color.Gray,
                         modifier = Modifier
                             .clickable { selectedTab = index }
-                            .padding(horizontal = 6.dp, vertical = 4.dp),
+                            .padding(horizontal = 3.dp, vertical = 4.dp),
                     )
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
 
             when (selectedTab) {
                 0 -> MapyTab(
@@ -123,11 +127,14 @@ private fun MapyTab(
     automatic: Boolean,
     onSelectionChange: (List<File>, Boolean) -> Unit,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+    ) {
         ToggleChip(
             checked = automatic,
             onCheckedChange = { onSelectionChange(selectedMaps, it) },
-            label = { Text("Auto podle polohy", fontSize = 10.sp) },
+            label = { Text("Auto podle polohy", fontSize = 11.sp, maxLines = 1) },
             toggleControl = { Switch(checked = automatic) },
             modifier = Modifier.fillMaxWidth(),
             colors = ToggleChipDefaults.toggleChipColors(
@@ -144,7 +151,7 @@ private fun MapyTab(
                     val newSelection = if (checked) selectedMaps + file else selectedMaps - file
                     onSelectionChange(newSelection, automatic)
                 },
-                label = { Text(file.name, fontSize = 9.sp, maxLines = 1) },
+                label = { Text(file.name, fontSize = 11.sp, maxLines = 1) },
                 toggleControl = { Switch(checked = isChecked) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ToggleChipDefaults.toggleChipColors(
@@ -163,26 +170,34 @@ private fun GivenThemeTab(
     config: AppConfig,
     onConfigChange: (AppConfig) -> Unit,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+    ) {
         Text("Akcent", fontSize = 10.sp, color = Color.Gray)
         Spacer(Modifier.height(4.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(AccentColor.entries) { color ->
-                val isSelected = config.accentColor == color
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(color.toComposeColor())
-                        .then(
-                            if (isSelected) Modifier.border(2.dp, Color.White, CircleShape)
-                            else Modifier
-                        )
-                        .clickable { onConfigChange(config.copy(accentColor = color)) },
-                )
+        AccentColor.entries.chunked(3).forEach { rowColors ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(vertical = 3.dp),
+            ) {
+                rowColors.forEach { color ->
+                    val isSelected = config.accentColor == color
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(color.toComposeColor())
+                            .then(
+                                if (isSelected) Modifier.border(2.dp, Color.White, CircleShape)
+                                else Modifier
+                            )
+                            .clickable { onConfigChange(config.copy(accentColor = color)) },
+                    )
+                }
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
         Text("Téma", fontSize = 10.sp, color = Color.Gray)
         Spacer(Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -192,8 +207,9 @@ private fun GivenThemeTab(
                     label = {
                         Text(
                             text = if (mode == ThemeMode.NORMAL) "Normální" else "Noční",
-                            fontSize = 9.sp,
+                            fontSize = 11.sp,
                             textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     },
                     colors = ChipDefaults.chipColors(
@@ -224,6 +240,7 @@ private fun JednotkyTab(
                         text = if (units == Units.METRIC) "Metry" else "Míle",
                         fontSize = 10.sp,
                         textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 },
                 colors = ChipDefaults.chipColors(

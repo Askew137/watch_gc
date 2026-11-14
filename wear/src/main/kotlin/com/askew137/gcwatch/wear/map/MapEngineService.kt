@@ -12,14 +12,17 @@ import org.mapsforge.map.layer.renderer.DatabaseRenderer
 import org.mapsforge.map.layer.renderer.RendererJob
 import org.mapsforge.map.model.DisplayModel
 import org.mapsforge.map.reader.MapFile
-import org.mapsforge.map.rendertheme.ExternalRenderTheme
+import org.mapsforge.map.rendertheme.StreamRenderTheme
+import org.mapsforge.map.rendertheme.rule.RenderThemeFuture
 import org.mapsforge.map.rendertheme.InternalRenderTheme
 import org.mapsforge.map.rendertheme.XmlRenderTheme
 import timber.log.Timber
 import java.io.File
-import java.io.InputStream
 
 private const val TILE_SIZE = 256
+
+/** Smaller labels suit a ~1.4" watch face. */
+private const val MAP_TEXT_SCALE = 0.7f
 private const val MAX_CACHE_BYTES = 48L * 1024 * 1024
 
 /**
@@ -44,7 +47,7 @@ class MapEngineService(private val context: Context) {
         "mapcache",
         TILE_SIZE,
         1f,
-        /*overdrawFactor=*/ 1.2f
+        /*overdrawFactor=*/ 1.2
     )
 
     init {
@@ -54,7 +57,6 @@ class MapEngineService(private val context: Context) {
 
     /** Replace the active set of .map files. */
     fun setMapFiles(files: List<File>) {
-        renderer?.destroy()
         multiStore?.close()
 
         if (files.isEmpty()) {
@@ -74,7 +76,6 @@ class MapEngineService(private val context: Context) {
         }
         multiStore = store
 
-        val renderTheme = resolveTheme(currentThemeMode)
         renderer = DatabaseRenderer(store, graphicFactory, tileCache, null, true, true, null)
         Timber.d("MapEngineService: loaded %d map file(s)", files.size)
     }
@@ -95,9 +96,9 @@ class MapEngineService(private val context: Context) {
         val rend = renderer ?: return null
 
         return try {
-            val tile = Tile(tileX, tileY, zoom, TILE_SIZE)
+            val tile = Tile(tileX.toInt(), tileY.toInt(), zoom, TILE_SIZE)
             val renderTheme = resolveTheme(currentThemeMode)
-            val job = RendererJob(tile, store, renderTheme, displayModel, 1f, false, false)
+            val job = RendererJob(tile, store, renderTheme, displayModel, MAP_TEXT_SCALE, false, false)
             val tileBitmap: TileBitmap? = rend.executeJob(job)
             tileBitmap?.let { AndroidGraphicFactory.getBitmap(it) }
         } catch (e: Exception) {
@@ -106,24 +107,18 @@ class MapEngineService(private val context: Context) {
         }
     }
 
-    private fun resolveTheme(mode: ThemeMode): XmlRenderTheme =
-        when (mode) {
-            ThemeMode.NIGHT_RED -> openNightTheme()
-            ThemeMode.NORMAL -> InternalRenderTheme.OSMARENDER
-        }
+    private val themeCache = mutableMapOf<ThemeMode, RenderThemeFuture>()
 
-    private fun openNightTheme(): XmlRenderTheme {
-        return object : XmlRenderTheme {
-            override fun getRelativePathPrefix() = ""
-            override fun getRenderThemeAsStream(): InputStream =
-                context.assets.open("themes/night_theme.xml")
-            override fun getMapsforgeThemeStyle() = null
-            override fun getMenuStyle() = null
+    private fun resolveTheme(mode: ThemeMode): RenderThemeFuture =
+        themeCache.getOrPut(mode) {
+            val xml: XmlRenderTheme = when (mode) {
+                ThemeMode.NIGHT_RED -> StreamRenderTheme("", context.assets.open("themes/night_theme.xml"))
+                ThemeMode.NORMAL -> InternalRenderTheme.OSMARENDER
+            }
+            RenderThemeFuture(graphicFactory, xml, displayModel).also { Thread(it).start() }
         }
-    }
 
     fun destroy() {
-        renderer?.destroy()
         multiStore?.close()
         tileCache.destroy()
     }
