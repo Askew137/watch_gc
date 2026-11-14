@@ -9,11 +9,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.askew137.gcwatch.core.model.AppConfig
 import com.askew137.gcwatch.mobile.maps.CopyProgress
-import com.askew137.gcwatch.mobile.maps.ImportProgress
 import com.askew137.gcwatch.mobile.maps.MapFileRepository
 import com.askew137.gcwatch.mobile.maps.MapTransferService
-import com.askew137.gcwatch.mobile.maps.RoutingFileRepository
-import com.askew137.gcwatch.mobile.routing.GraphHopperEngine
 import com.askew137.gcwatch.mobile.update.UpdateChecker
 import com.askew137.gcwatch.mobile.update.UpdateInfo
 import com.google.android.gms.wearable.Wearable
@@ -57,17 +54,6 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
     private val _copyProgress = MutableStateFlow<CopyProgress?>(null)
     val copyProgress: StateFlow<CopyProgress?> = _copyProgress.asStateFlow()
 
-    // ── Routing graphs ────────────────────────────────────────────────────────
-
-    private val _routingGraphs = MutableStateFlow<List<File>>(emptyList())
-    val routingGraphs: StateFlow<List<File>> = _routingGraphs.asStateFlow()
-
-    private val _importProgress = MutableStateFlow<ImportProgress?>(null)
-    val importProgress: StateFlow<ImportProgress?> = _importProgress.asStateFlow()
-
-    val graphHopperReady: Boolean
-        get() = GraphHopperEngine.isReady(app)
-
     // ── Update check ──────────────────────────────────────────────────────────
 
     private val _updateInfo = MutableStateFlow<UpdateInfo?>(null)
@@ -80,7 +66,6 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         refreshMapFiles()
-        refreshRoutingGraphs()
         refreshConnectedNode()
     }
 
@@ -104,28 +89,6 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
 
     fun sendMapToWatch(mapFile: File) {
         MapTransferService.startTransfer(app, Uri.fromFile(mapFile))
-    }
-
-    fun refreshRoutingGraphs() {
-        _routingGraphs.value = RoutingFileRepository.listRoutingGraphs(app)
-    }
-
-    fun importOsmPbf(uri: Uri) {
-        viewModelScope.launch {
-            RoutingFileRepository.importOsmPbf(app, uri).collectLatest { progress ->
-                _importProgress.value = progress
-                when (progress.phase) {
-                    com.askew137.gcwatch.mobile.maps.ImportPhase.DONE -> {
-                        refreshRoutingGraphs()
-                        _importProgress.value = null
-                    }
-                    com.askew137.gcwatch.mobile.maps.ImportPhase.ERROR -> {
-                        Timber.e("OSM import error: ${progress.error}")
-                    }
-                    else -> { /* continue */ }
-                }
-            }
-        }
     }
 
     fun checkForUpdate() {

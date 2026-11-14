@@ -1,12 +1,15 @@
 package com.askew137.gcwatch.mobile.geo
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.askew137.gcwatch.core.communication.MessagePaths
+import com.askew137.gcwatch.core.communication.RouteSerializer
 import com.askew137.gcwatch.core.communication.WaypointSerializer
 import com.askew137.gcwatch.core.model.Waypoint
+import com.askew137.gcwatch.mobile.routing.Routing
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +31,16 @@ class GeoIntentActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handle(intent)
+    }
+
+    /** An already-alive instance can receive another link; never drop it silently. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handle(intent)
+    }
+
+    private fun handle(intent: Intent?) {
         // Theme.NoDisplay: finish() MUST be called before onResume() completes, so we parse
         // synchronously, hand the network work to a process-wide scope and finish right away.
         val uri = intent?.data
@@ -62,6 +75,19 @@ class GeoIntentActivity : ComponentActivity() {
             nodes.forEach { node ->
                 client.sendMessage(node.id, MessagePaths.SET_TARGET, payload).await()
                 Timber.i("Sent waypoint ${waypoint.code.ifEmpty { waypoint.label }} to ${node.displayName}")
+            }
+
+            // Push the route right away (after the waypoint: the watch drops the old route when a
+            // new target arrives) so the watch can toggle line/route without waiting.
+            val route = Routing.provider.routeTo(waypoint)
+            if (route == null) {
+                Timber.d("No route available for the waypoint; watch keeps the straight line")
+            } else {
+                val routePayload = RouteSerializer.encode(route)
+                nodes.forEach { node ->
+                    client.sendMessage(node.id, MessagePaths.ROUTE_RESULT, routePayload).await()
+                }
+                Timber.i("Sent route (${route.segments.size} segments, ${route.totalDistanceM.toInt()} m)")
             }
         } catch (e: Exception) {
             Timber.e(e, "Error forwarding geo URI waypoint to watch")

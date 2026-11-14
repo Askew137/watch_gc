@@ -6,7 +6,7 @@ Offline geocaching navigátor pro **OnePlus Watch 2** (Wear OS 4) s companion ap
 - 🗺️ Offline vektorové mapy (Mapsforge `.map` soubory)
 - 📍 Přímý přístup k L1+L5 GPS hardware hodinek (bypass Bluetooth tellhering)
 - 🧭 Duální rozhraní: **Mapa** ↔ **Kompas/Radar**
-- 🛤️ Plánování trasy po stezkách s přerušovanou přímou linií ke keši (routing na telefonu přes GraphHopper)
+- 🎯 Cíl z odkazu `geo:` (c:geo apod.): na mapě značka a vzdušná čára; jedním tlačítkem přepínáš vzdušná čára → trasa → jen cíl (trasu pošle telefon, jakmile bude routovací zdroj – zatím není)
 - 🌙 Night Red mód pro zachování tmavého vidění
 - 🔄 Synchronizace nastavení mezi hodinkami a telefonem
 
@@ -37,12 +37,11 @@ gradle wrapper --gradle-version=8.9
 
 ## Stažení map
 
-Aplikace na telefonu obsahuje průvodce. Potřebuješ dva typy souborů:
+Aplikace na telefonu obsahuje průvodce. Potřebuješ soubor s mapou:
 
 | Soubor | Použití | Zdroj |
 |--------|---------|-------|
 | `*.map` (Mapsforge) | Offline mapa na hodinkách | [OpenAndroMaps.org](https://www.openandromaps.org) nebo [BBBike.org](https://extract.bbbike.org) |
-| `*.osm.pbf` | Routing grafy na telefonu (GraphHopper) | [Geofabrik.de](https://download.geofabrik.de) |
 
 ## Struktura projektu
 

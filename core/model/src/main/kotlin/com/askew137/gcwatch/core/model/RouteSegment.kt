@@ -8,7 +8,7 @@ data class RoutePoint(val lat: Double, val lon: Double)
 
 @Serializable
 enum class SegmentType {
-    /** On-road / on-trail segment computed by GraphHopper. */
+    /** On-road / on-trail segment computed by the routing engine. */
     ROAD,
     /** Straight dashed line from last road node to geocache. */
     DASHED_DIRECT,

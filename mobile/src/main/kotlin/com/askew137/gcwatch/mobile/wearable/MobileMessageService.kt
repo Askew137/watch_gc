@@ -3,13 +3,9 @@ package com.askew137.gcwatch.mobile.wearable
 import android.content.Intent
 import com.askew137.gcwatch.core.communication.ConfigSerializer
 import com.askew137.gcwatch.core.communication.MessagePaths
-import com.askew137.gcwatch.core.communication.RouteRequest
-import com.askew137.gcwatch.core.communication.RouteSerializer
-import com.askew137.gcwatch.mobile.routing.GraphHopperEngine
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
-import com.graphhopper.util.shapes.GHPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,8 +18,6 @@ import timber.log.Timber
  * [WearableListenerService] running on the phone side.
  *
  * Handles:
- *  - [MessagePaths.ROUTE_REQUEST] – decodes a [RouteRequest], calls [GraphHopperEngine],
- *    encodes the resulting [ComputedRoute] and sends it back via [MessagePaths.ROUTE_RESULT].
  *  - [MessagePaths.CONFIG_SYNC] – decodes [AppConfig] and persists it to SharedPreferences,
  *    then broadcasts [ACTION_CONFIG_UPDATED] so the UI can react without polling.
  */
@@ -34,7 +28,6 @@ class MobileMessageService : WearableListenerService() {
     override fun onMessageReceived(event: MessageEvent) {
         Timber.d("Message received: path=${event.path} from=${event.sourceNodeId}")
         when (event.path) {
-            MessagePaths.ROUTE_REQUEST -> handleRouteRequest(event)
             MessagePaths.CONFIG_SYNC   -> handleConfigSync(event)
             else -> Timber.w("Unhandled message path: ${event.path}")
         }
@@ -43,29 +36,6 @@ class MobileMessageService : WearableListenerService() {
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
-    }
-
-    // ── Route request ────────────────────────────────────────────────────────
-
-    private fun handleRouteRequest(event: MessageEvent) {
-        scope.launch {
-            try {
-                val request = RouteRequest.decode(event.data)
-                Timber.d("RouteRequest from=${request.fromLat},${request.fromLon} to=${request.toLat},${request.toLon}")
-
-                val from = GHPoint(request.fromLat, request.fromLon)
-                val to   = GHPoint(request.toLat,   request.toLon)
-                val route = GraphHopperEngine.computeRoute(applicationContext, from, to)
-
-                val payload = RouteSerializer.encode(route)
-                Wearable.getMessageClient(applicationContext)
-                    .sendMessage(event.sourceNodeId, MessagePaths.ROUTE_RESULT, payload)
-                    .await()
-                Timber.i("Route sent: ${route.segments.size} segments, ${route.totalDistanceM.toInt()} m")
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to handle ROUTE_REQUEST")
-            }
-        }
     }
 
     // ── Config sync ──────────────────────────────────────────────────────────

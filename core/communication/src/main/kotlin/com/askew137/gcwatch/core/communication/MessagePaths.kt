@@ -4,10 +4,10 @@ object MessagePaths {
     /** Phone → Watch: set active navigation target. Payload: protobuf Waypoint. */
     const val SET_TARGET = "/set_target"
 
-    /** Watch → Phone: request route calculation. Payload: protobuf RouteRequest. */
-    const val ROUTE_REQUEST = "/route_request"
-
-    /** Phone → Watch: computed route result. Payload: protobuf ComputedRoute. */
+    /**
+     * Phone → Watch: route to the active target, pushed right after SET_TARGET (not requested
+     * by the watch). Payload: protobuf ComputedRoute.
+     */
     const val ROUTE_RESULT = "/route_result"
 
     /** Bidirectional: config changed. Payload: protobuf AppConfig. */

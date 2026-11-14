@@ -39,6 +39,7 @@ fun WearApp(
     val location by gnssRepository.location.collectAsStateWithLifecycle()
     val activeTarget by navigationViewModel.activeTarget.collectAsStateWithLifecycle()
     val currentRoute by navigationViewModel.currentRoute.collectAsStateWithLifecycle()
+    val lineMode by navigationViewModel.lineMode.collectAsStateWithLifecycle()
 
     // Build NavigationTarget from location + active target
     val navigationTarget = remember(location, activeTarget) {
@@ -62,6 +63,7 @@ fun WearApp(
                     location = location,
                     activeTarget = activeTarget,
                     route = currentRoute,
+                    lineMode = lineMode,
                     mapEngine = mapEngine,
                     autoMapSelector = autoMapSelector,
                     mapViewModel = mapViewModel,
@@ -69,7 +71,7 @@ fun WearApp(
                     gnssRepository = gnssRepository,
                     onNavigateToCompass = { navController.navigate(DEST_COMPASS) },
                     onConfigChange = { configViewModel.updateConfig(it) },
-                    onRequestRoute = { from, to -> navigationViewModel.requestRoute(from, to) },
+                    onCycleLineMode = { navigationViewModel.cycleLineMode() },
                 )
             }
             composable(DEST_COMPASS) {

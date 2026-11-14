@@ -27,10 +27,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.Icon
+import androidx.wear.compose.material.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import com.askew137.gcwatch.wear.navigation.TargetLineMode
 import com.askew137.gcwatch.wear.ui.components.IconButton
 import androidx.wear.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CallMade
+import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Map
@@ -69,6 +77,7 @@ fun MapScreen(
     location: WatchLocation?,
     activeTarget: Waypoint?,
     route: ComputedRoute?,
+    lineMode: TargetLineMode,
     mapEngine: MapEngineService,
     autoMapSelector: AutoMapSelector,
     mapViewModel: MapViewModel,
@@ -76,12 +85,25 @@ fun MapScreen(
     gnssRepository: GnssRepository,
     onNavigateToCompass: () -> Unit,
     onConfigChange: (AppConfig) -> Unit,
-    onRequestRoute: (WatchLocation, Waypoint) -> Unit,
+    onCycleLineMode: () -> TargetLineMode?,
 ) {
     val zoom by mapViewModel.zoom.collectAsStateWithLifecycle()
     val rotationDeg by mapViewModel.mapRotationDeg.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    // ROUTE without a route (e.g. cleared) falls back to the air line.
+    val effectiveLineMode =
+        if (lineMode == TargetLineMode.ROUTE && route == null) TargetLineMode.AIR_LINE else lineMode
+
+    // Short on-screen label after tapping the line button, so the current state is obvious.
+    var lineHint by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(lineHint) {
+        if (lineHint != null) {
+            delay(1600)
+            lineHint = null
+        }
+    }
     val gnssSource by gnssRepository.source.collectAsStateWithLifecycle()
 
     val accentColor = remember(config.accentColor) { config.accentColor.toComposeColor() }
@@ -141,6 +163,8 @@ fun MapScreen(
             mapsVersion = mapsVersion,
             rotationDeg = rotationDeg,
             route = route,
+            target = activeTarget,
+            lineMode = effectiveLineMode,
             accentColor = accentColor,
             modifier = Modifier.fillMaxSize(),
         )
@@ -157,18 +181,31 @@ fun MapScreen(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 14.dp).offset(x = 26.dp),
         )
 
-        // ── Left edge: route plan + compass screen ───────────────────────────
+        // ── Left edge: target line mode (air line / route / marker only) + compass ──
         EdgeIconButton(
             onClick = {
-                val loc = location
-                val target = activeTarget
-                if (loc != null && target != null) {
-                    onRequestRoute(loc, target)
-                } else {
-                    Timber.w("MapScreen: cannot request route — location=%s target=%s", loc, target)
+                val mode = onCycleLineMode()
+                lineHint = when {
+                    mode == null -> "Žádný cíl"
+                    mode == TargetLineMode.AIR_LINE -> "Vzdušná čára"
+                    mode == TargetLineMode.ROUTE -> "Trasa"
+                    route == null -> "Jen cíl (trasa není k dispozici)"
+                    else -> "Jen cíl"
                 }
             },
-            icon = { Icon(Icons.Rounded.Route, contentDescription = "Naplánovat trasu", modifier = Modifier.size(20.dp), tint = accentColor) },
+            icon = {
+                val (icon, tint) = when (effectiveLineMode) {
+                    TargetLineMode.AIR_LINE -> Icons.Rounded.CallMade to accentColor
+                    TargetLineMode.ROUTE -> Icons.Rounded.Route to accentColor
+                    TargetLineMode.OFF -> Icons.Rounded.LocationOn to Color.Gray
+                }
+                Icon(
+                    icon,
+                    contentDescription = "Čára k cíli",
+                    modifier = Modifier.size(20.dp),
+                    tint = tint,
+                )
+            },
             modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp).offset(y = (-22).dp),
         )
         EdgeIconButton(
@@ -194,6 +231,20 @@ fun MapScreen(
             icon = { Icon(Icons.Rounded.MyLocation, contentDescription = "Vycentrovat, sever nahoře", modifier = Modifier.size(20.dp), tint = accentColor) },
             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp).offset(y = 22.dp),
         )
+
+        lineHint?.let { hint ->
+            Text(
+                text = hint,
+                fontSize = 11.sp,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 58.dp)
+                    .background(Color.Black.copy(alpha = 0.75f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            )
+        }
 
         // ── Bottom: menu icon ────────────────────────────────────────────────
         EdgeIconButton(

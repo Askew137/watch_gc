@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.unit.dp
 import com.askew137.gcwatch.core.model.ComputedRoute
 import com.askew137.gcwatch.core.model.SegmentType
+import com.askew137.gcwatch.core.model.Waypoint
+import com.askew137.gcwatch.wear.navigation.TargetLineMode
 import com.askew137.gcwatch.wear.map.MapEngineService
 import kotlin.math.cos
 import kotlin.math.ln
@@ -40,7 +42,9 @@ data class LatLon(val lat: Double, val lon: Double)
  * @param center       Current WGS-84 center of the viewport.
  * @param zoom         Zoom level (8f..19f).
  * @param rotationDeg  Canvas rotation in degrees (0 = north-up).
- * @param route        Optional computed route to draw.
+ * @param route        Optional computed route (drawn in [TargetLineMode.ROUTE]).
+ * @param target       Active target; always marked, connected per [lineMode].
+ * @param lineMode     Air line, route, or marker only.
  * @param accentColor  Accent color used for the position dot and route highlight.
  */
 @Composable
@@ -51,6 +55,8 @@ fun MapCanvas(
     mapsVersion: Int,
     rotationDeg: Float,
     route: ComputedRoute?,
+    target: Waypoint?,
+    lineMode: TargetLineMode,
     accentColor: Color,
     modifier: Modifier = Modifier,
 ) {
@@ -65,7 +71,16 @@ fun MapCanvas(
             transformBlock = { rotate(degrees = rotationDeg, pivot = center(size)) }
         ) {
             drawTiles(engine, center, zoomByte, canvasW, canvasH)
-            route?.let { drawRoute(it, center, zoomByte, canvasW, canvasH, accentColor) }
+            if (target != null) {
+                val (tx, ty) = latLonToCanvas(target.lat, target.lon, center, zoomByte.toInt(), canvasW, canvasH)
+                when {
+                    lineMode == TargetLineMode.ROUTE && route != null ->
+                        drawRoute(route, center, zoomByte, canvasW, canvasH, accentColor)
+                    lineMode != TargetLineMode.OFF ->
+                        drawAirLine(from = center(size), to = Offset(tx, ty), accentColor = accentColor)
+                }
+                drawTargetMarker(Offset(tx, ty), accentColor)
+            }
         }
 
         // Always draw position dot on top (un-rotated), with a dark halo so it
@@ -119,6 +134,37 @@ private fun DrawScope.drawTiles(
     }
 }
 
+// ── Target overlays ───────────────────────────────────────────────────────────
+
+/** Widened copy of a stroke style, used as a dark outline so lines read on any map colour. */
+private fun Stroke.casing(extraPx: Float) = Stroke(
+    width = width + 2 * extraPx,
+    cap = cap,
+    join = join,
+    pathEffect = pathEffect,
+)
+
+private fun DrawScope.drawAirLine(from: Offset, to: Offset, accentColor: Color) {
+    val path = Path().apply {
+        moveTo(from.x, from.y)
+        lineTo(to.x, to.y)
+    }
+    val style = Stroke(
+        width = 3.dp.toPx(),
+        cap = StrokeCap.Round,
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 7.dp.toPx()), 0f),
+    )
+    drawPath(path = path, color = Color.Black.copy(alpha = 0.55f), style = style.casing(2.dp.toPx()))
+    drawPath(path = path, color = accentColor, style = style)
+}
+
+/** Hollow ring with a dark halo: clearly different from the filled "me" dot. */
+private fun DrawScope.drawTargetMarker(at: Offset, accentColor: Color) {
+    drawCircle(color = Color.Black.copy(alpha = 0.85f), radius = 12.dp.toPx(), center = at)
+    drawCircle(color = Color.White, radius = 9.dp.toPx(), center = at, style = Stroke(width = 3.dp.toPx()))
+    drawCircle(color = accentColor, radius = 4.dp.toPx(), center = at)
+}
+
 // ── Route overlay ─────────────────────────────────────────────────────────────
 
 private fun DrawScope.drawRoute(
@@ -152,6 +198,7 @@ private fun DrawScope.drawRoute(
                 ),
             )
         }
+        drawPath(path = path, color = Color.Black.copy(alpha = 0.55f), style = style.casing(2.dp.toPx()))
         drawPath(path = path, color = accentColor, style = style)
     }
 }

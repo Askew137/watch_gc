@@ -58,8 +58,6 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
-            // GraphHopper ships duplicate service files; merge them.
-            merges += "META-INF/services/*"
         }
     }
 }
@@ -89,9 +87,6 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlinx.serialization.proto)
-
-    // GraphHopper (offline routing)
-    implementation(libs.graphhopper.core)
 
     // HTTP (GitHub update check)
     implementation(libs.okhttp)
