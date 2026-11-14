@@ -29,6 +29,12 @@ jobs:
       - name: Build debug APKs
         run: ./gradlew :mobile:assembleDebug :wear:assembleDebug
 
+      # Release builds are minified with R8; building them on every push catches
+      # missing keep/dontwarn rules early. Without a keystore they use the debug key
+      # (NOT uploaded anywhere from this job).
+      - name: Build release APKs (R8 check)
+        run: ./gradlew :mobile:assembleRelease :wear:assembleRelease
+
       - name: Upload Mobile Debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -46,6 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     needs: build
+    permissions:
+      contents: write   # attach APKs to the GitHub Release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -60,7 +68,25 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # Both APKs MUST be signed with the same key (Wearable Data Layer + updater).
+      # Repository secrets: GCWATCH_KEYSTORE_BASE64, GCWATCH_KEYSTORE_PASSWORD,
+      # GCWATCH_KEY_ALIAS, GCWATCH_KEY_PASSWORD.
+      - name: Decode release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.GCWATCH_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Secret GCWATCH_KEYSTORE_BASE64 is not set - refusing to publish debug-signed APKs."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+
       - name: Build release APKs
+        env:
+          GCWATCH_KEYSTORE_FILE: ${{ runner.temp }}/release.jks
+          GCWATCH_KEYSTORE_PASSWORD: ${{ secrets.GCWATCH_KEYSTORE_PASSWORD }}
+          GCWATCH_KEY_ALIAS: ${{ secrets.GCWATCH_KEY_ALIAS }}
+          GCWATCH_KEY_PASSWORD: ${{ secrets.GCWATCH_KEY_PASSWORD }}
         run: ./gradlew :mobile:assembleRelease :wear:assembleRelease
 
       - name: Upload release APKs to GitHub Release

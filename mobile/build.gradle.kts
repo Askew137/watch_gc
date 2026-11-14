@@ -5,6 +5,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+apply(from = rootProject.file("gradle/release-signing.gradle.kts"))
+@Suppress("UNCHECKED_CAST")
+val releaseKeystore = extra["releaseKeystore"] as Map<String, String>?
+
 android {
     namespace = "com.askew137.gcwatch.mobile"
     compileSdk = 35
@@ -17,8 +21,21 @@ android {
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        releaseKeystore?.let { ks ->
+            create("release") {
+                storeFile = file(ks.getValue("file"))
+                storePassword = ks.getValue("storePassword")
+                keyAlias = ks.getValue("keyAlias")
+                keyPassword = ks.getValue("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Falls back to the debug key when no release keystore is configured.
+            signingConfig = signingConfigs.getByName(if (releaseKeystore != null) "release" else "debug")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
